@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trash2, PlusCircle, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { openDB } from "idb";
 
 interface Todo {
   id: number;
@@ -13,40 +14,80 @@ interface Todo {
   completed: boolean;
 }
 
+/**
+ * Creates and initializes the IndexedDB database for the Todo application.
+ *
+ * @constant {Promise<IDBDatabase>} dbPromise - A promise that resolves to the opened database.
+ *
+ * This constant initializes a connection to an IndexedDB database named "TodoApp".
+ * It sets up the database structure with version 1, creating an object store named "todos".
+ *
+ * @property {function} upgrade - Callback function to set up the database schema.
+ * @param {IDBDatabase} db - The database instance to be upgraded.
+ */
+const dbPromise = openDB("TodoApp", 1, {
+  upgrade(db) {
+    // Creates an object store named "todos" with auto-incrementing IDs
+    db.createObjectStore("todos", { keyPath: "id", autoIncrement: true });
+  },
+});
+
 export default function TodoList() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [newTodo, setNewTodo] = useState("");
 
-  const addTodo = (e: React.FormEvent) => {
+  useEffect(() => {
+    loadTodos();
+  }, []);
+
+  async function loadTodos() {
+    const db = await dbPromise;
+    const tx = db.transaction("todos", "readonly");
+    const store = tx.objectStore("todos");
+    const items = await store.getAll();
+    setTodos(items);
+  }
+
+  async function addTodo(e: React.FormEvent) {
     e.preventDefault();
-    if (newTodo.trim()) {
-      setTodos([
-        ...todos,
-        { id: Date.now(), text: newTodo.trim(), completed: false },
-      ]);
-      setNewTodo("");
-    }
-  };
+    if (!newTodo.trim()) return;
 
-  const toggleTodo = (id: number) => {
-    setTodos(
-      todos.map((todo) =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo
-      )
-    );
-  };
+    const db = await dbPromise;
+    const tx = db.transaction("todos", "readwrite");
+    const store = tx.objectStore("todos");
+    await store.add({ text: newTodo, completed: false });
+    await tx.done;
 
-  const removeTodo = (id: number) => {
-    setTodos(todos.filter((todo) => todo.id !== id));
-  };
+    setNewTodo("");
+    loadTodos();
+  }
+
+  async function toggleTodo(id: number) {
+    const db = await dbPromise;
+    const tx = db.transaction("todos", "readwrite");
+    const store = tx.objectStore("todos");
+    const todo = await store.get(id);
+    await store.put({ ...todo, completed: !todo.completed });
+    await tx.done;
+
+    loadTodos();
+  }
+
+  async function removeTodo(id: number) {
+    const db = await dbPromise;
+    const tx = db.transaction("todos", "readwrite");
+    const store = tx.objectStore("todos");
+    await store.delete(id);
+    await tx.done;
+
+    loadTodos();
+  }
 
   return (
     <div className="max-w-xl w-full mx-auto overflow-hidden">
-      <div className="p-6 bg-gradient-to-r from-primary to-secondary-foreground">
-        <h1 className="text-2xl font-bold text-primary-foreground text-center">
-          Todo List
-        </h1>
-      </div>
+      <h1 className="p-6 text-2xl font-bold text-center">
+        Local-first Todos
+      </h1>
       <div className="p-6">
         <form onSubmit={addTodo} className="flex mb-6">
           <Input
@@ -65,7 +106,7 @@ export default function TodoList() {
           </Button>
         </form>
         <div
-          className="h-[300px] overflow-y-auto pr-2"
+          className="h-[300px] overflow-y-auto"
           style={{ scrollbarWidth: "thin" }}
         >
           <AnimatePresence initial={false}>

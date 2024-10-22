@@ -18,22 +18,22 @@ export default function TodoList() {
   const [newTodo, setNewTodo] = useState("");
   const db = usePGlite();
 
-  const maxNumber = 100;
   const items = useLiveQuery<Todo>(
     `
     SELECT *
     FROM todos
     ORDER BY id DESC
-    LIMIT $1
-  `,
-    [maxNumber]
+  `
   );
 
   const insertItem = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const todo = newTodo.trim();
     if (todo) {
-      await db.query("INSERT INTO todos (title) VALUES ($1);", [todo]);
+      await db.query("INSERT INTO todos (title, completed) VALUES ($1, $2);", [
+        todo,
+        false,
+      ]);
       setNewTodo("");
     }
   };

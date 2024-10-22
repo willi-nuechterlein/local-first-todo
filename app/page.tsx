@@ -95,18 +95,18 @@ export default function TodoList() {
             value={newTodo}
             onChange={(e) => setNewTodo(e.target.value)}
             placeholder="Add a new task"
-            className="flex-grow mr-2 bg-secondary"
+            className="flex-grow mr-4"
           />
           <Button
             type="submit"
-            className="bg-primary hover:bg-primary/90 text-primary-foreground"
+            className="bg-green-600 hover:bg-green-700 text-primary-foreground"
           >
             <PlusCircle className="h-5 w-5 mr-1" />
             Add
           </Button>
         </form>
         <div
-          className="h-[300px] overflow-y-auto"
+          className="overflow-y-auto max-h-[70vh]"
           style={{ scrollbarWidth: "thin" }}
         >
           <AnimatePresence initial={false}>
@@ -117,7 +117,7 @@ export default function TodoList() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="flex items-center justify-between p-3 mb-2 bg-background border border-border rounded-md hover:bg-secondary/80 transition-colors"
+                className="flex items-center justify-between p-3 pl-5 mb-2 bg-background border border-border rounded-md hover:bg-secondary/20 transition-colors"
               >
                 <div className="flex items-center flex-grow mr-2 overflow-hidden">
                   <motion.button

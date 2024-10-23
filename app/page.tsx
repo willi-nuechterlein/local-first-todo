@@ -6,7 +6,7 @@ import { Trash2, PlusCircle, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { openDB } from "idb";
+import { openDB, IDBPDatabase } from "idb";
 
 interface Todo {
   id: number;
@@ -35,14 +35,19 @@ const dbPromise = openDB("TodoApp", 1, {
 export default function TodoList() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [newTodo, setNewTodo] = useState("");
+  const [db, setDb] = useState<IDBPDatabase | null>(null);
 
   useEffect(() => {
-    loadTodos();
+    const initDb = async () => {
+      const database = await dbPromise;
+      setDb(database);
+      loadTodos(database);
+    };
+    initDb();
   }, []);
 
-  async function loadTodos() {
-    const db = await dbPromise;
-    const tx = db.transaction("todos", "readonly");
+  async function loadTodos(database: IDBPDatabase) {
+    const tx = database.transaction("todos", "readonly");
     const store = tx.objectStore("todos");
     const items = await store.getAll();
     setTodos(items);
@@ -50,37 +55,38 @@ export default function TodoList() {
 
   async function addTodo(e: React.FormEvent) {
     e.preventDefault();
-    if (!newTodo.trim()) return;
+    if (!newTodo.trim() || !db) return;
 
-    const db = await dbPromise;
     const tx = db.transaction("todos", "readwrite");
     const store = tx.objectStore("todos");
     await store.add({ text: newTodo, completed: false });
     await tx.done;
 
     setNewTodo("");
-    loadTodos();
+    loadTodos(db);
   }
 
   async function toggleTodo(id: number) {
-    const db = await dbPromise;
+    if (!db) return;
+
     const tx = db.transaction("todos", "readwrite");
     const store = tx.objectStore("todos");
     const todo = await store.get(id);
     await store.put({ ...todo, completed: !todo.completed });
     await tx.done;
 
-    loadTodos();
+    loadTodos(db);
   }
 
   async function removeTodo(id: number) {
-    const db = await dbPromise;
+    if (!db) return;
+
     const tx = db.transaction("todos", "readwrite");
     const store = tx.objectStore("todos");
     await store.delete(id);
     await tx.done;
 
-    loadTodos();
+    loadTodos(db);
   }
 
   return (

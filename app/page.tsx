@@ -92,7 +92,7 @@ export default function TodoList() {
   return (
     <div className="max-w-xl w-full mx-auto overflow-hidden">
       <h1 className="p-6 text-2xl font-bold text-center">
-        Local-first Todos
+        Local-first to-dos
       </h1>
       <div className="p-6">
         <form onSubmit={addTodo} className="flex mb-6">

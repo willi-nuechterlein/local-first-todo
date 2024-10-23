@@ -30,8 +30,8 @@ To run this project locally:
 ## Examples (see other branches)
 
 - `main`: Basic example using IndexedDB wrapper (idb)
-- `electric-sql`: Implementation using ElectricSQL for local-first sync and PGlite as 
-- `electric-sql-write`: Implementation using PGlite for local SQLite database
+- `electric-sql`: Implementation using ElectricSQL for local-first sync and PGlite as local db
+- `electric-sql-write`: Implementation using ElectricSQL for local-first sync and PGlite as local db (+ write operations via API route)
 
 Each branch demonstrates a different approach to local-first data storage and synchronization:
 

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { useLiveQuery, usePGlite } from "@electric-sql/pglite-react";
+import { useLiveQuery } from "@electric-sql/pglite-react";
 
 interface Todo {
   id: number;
@@ -16,7 +16,6 @@ interface Todo {
 
 export default function TodoList() {
   const [newTodo, setNewTodo] = useState("");
-  const db = usePGlite();
 
   const items = useLiveQuery<Todo>(
     `
@@ -30,23 +29,29 @@ export default function TodoList() {
     e.preventDefault();
     const todo = newTodo.trim();
     if (todo) {
-      await db.query("INSERT INTO todos (title, completed) VALUES ($1, $2);", [
-        todo,
-        false,
-      ]);
+      await fetch("/api/todos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: todo }),
+      });
       setNewTodo("");
     }
   };
 
   const deleteItem = async (id: number) => {
-    await db.query("DELETE FROM todos WHERE id = $1", [id]);
+    await fetch("/api/todos", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
   };
 
   const updateItem = async (id: number, completed: boolean) => {
-    await db.query("UPDATE todos SET completed = $1 WHERE id = $2", [
-      completed,
-      id,
-    ]);
+    await fetch("/api/todos", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, completed }),
+    });
   };
 
   return (

@@ -41,6 +41,7 @@ export function Providers({ children }: { children: ReactNode }) {
     }
 
     initDb();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!db) {
